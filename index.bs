@@ -1,0 +1,273 @@
+<pre class='metadata'>
+Title: Linked Data Notifications
+Level: 1
+Status: LD
+Editor: Ruben Dedecker, [KNoWS](https://knows.idlab.ugent.be/team/), ruben.dedecker@ugent.be 
+Abstract: This document proposes a mapping from the ActivityStreams 2.0 vocabulary to a subset of the Android Notification specification
+Markup Shorthands: markdown yes 
+Boilerplate: 
+</pre>
+
+<style>
+table {
+  margin: 25px auto;
+  border-collapse: collapse;
+  border: 1px solid #eee;
+  border-bottom: 2px solid #005A9C;
+}
+table tr:hover {
+  background: #f4f4f4;
+}
+table tr:hover td {
+  color: #555;
+}
+table th, table td {
+  color: #999;
+  border: 1px solid #eee;
+  padding: 12px 12px;
+  border-collapse: collapse;
+}
+table th {
+  background: #005A9C;
+  color: #fff;
+}
+table tbody > tr > th {
+  background: #fff;
+  color: #005A9C;
+}
+table th.last {
+  border-right: none;
+}
+</style>
+
+# Document Conventions
+
+Within this document, the following namespace prefix bindings to [[URI]]-s are used:
+
+<table>
+  <thead>
+    <tr>
+      <th>Prefix
+      <th>Namespace
+  <tbody>
+    <tr>
+      <td>as
+      <td>https://www.w3.org/ns/activitystreams#
+</table>
+
+# Introduction 
+
+This document covers proposal for a mapping from the ActivityStreams 2.0 vocabulary to a subset of the Android Notification specification.
+By standardizing what parts of Linked Data Notifications will be presented as the human-readable interface for the notifications in end-user systems,
+we can build applications that can natively interact with different systems.
+
+# System notifications 
+
+We base ourselves on how notifications are handled in the Android ecosystem.
+We use [the official Android notifications documentation page](https://developer.android.com/develop/ui/views/notifications#Templates) as the baseline for this specification.
+
+<img alt="blank surface" src="images/notification_items.png" width="650px"/>
+
+The default parts of a system notification on Android are the following:
+
+1. Small icon: required; set using setSmallIcon().
+2. App name: provided by the system.
+3. Time stamp: provided by the system, but you can override it using setWhen() or hide it using setShowWhen(false).
+4. Large icon: optional; usually used only for contact photos. Don't use it for your app icon. Set using setLargeIcon().
+5. Title: optional; set using setContentTitle().
+6. Text: optional; set using setContentText().
+7. Style: optional;
+
+# Linked Data Display Notification Components
+
+In this section, we define the mappings from [ActivityStreams 2.0](https://www.w3.org/ns/activitystreams) vocabulary to the android notification components.
+
+
+<table>
+  <thead>
+    <tr>
+      <th>required
+      <th>component name
+      <th>explanation
+      <th>rdf predicate order
+      <th>rdf namespace
+  <tbody>
+    <tr>
+      <td>✔
+      <td>small icon
+      <td>the app icon showed on the notification
+      <td>generator > icon
+      <td>https://www.w3.org/ns/activitystreams#
+    <tr style="background-color: #ffabab !important">
+      <td>✔
+      <td>app id
+      <td>the app identifier
+      <td>generator > id
+      <td>https://www.w3.org/ns/activitystreams#
+    <tr>
+      <td>✔
+      <td>app name
+      <td>the app name
+      <td>generator > name
+      <td>https://www.w3.org/ns/activitystreams#
+    <tr>
+      <td>✔
+      <td>time stamp
+      <td>notification timestamp
+      <td>published
+      <td>https://www.w3.org/ns/activitystreams#
+    <tr>
+      <td>✘
+      <td>large icon
+      <td>Image shown in the notification body
+      <td>image
+      <td>https://www.w3.org/ns/activitystreams#
+    <tr>
+      <td>✘
+      <td>title
+      <td>notification title
+      <td>name
+      <td>https://www.w3.org/ns/activitystreams#
+    <tr>
+      <td>✘
+      <td>text
+      <td>notification text
+      <td>content || summary
+      <td>https://www.w3.org/ns/activitystreams#
+    <tr style="background-color: #ffabab !important">
+      <td>✘
+      <td>style
+      <td>notification style
+      <td>style
+      <td>https://www.example.org/ns#
+</table>
+
+## Generator
+To be displayed, a notification **MUST** have a `https://www.w3.org/ns/activitystreams#generator` predicate.
+This predicate **SHOULD** lead to an object, for which the following fields **SHOULD** be provided using the `https://www.w3.org/ns/activitystreams#` namespace, except for the `id` and `type` values, which are part of the `rdf` namespace:
+- id (the identifier of the actor generating the notification)
+- type (the type of the actor generating the notification, this **SHOULD** be one of the [`activitystreams 2.0 actor types`](https://www.w3.org/TR/activitystreams-vocabulary/#actor-types))
+    * https://www.w3.org/ns/activitystreams#Application
+    * https://www.w3.org/ns/activitystreams#Group
+    * https://www.w3.org/ns/activitystreams#Organization
+    * https://www.w3.org/ns/activitystreams#Person
+    * https://www.w3.org/ns/activitystreams#Service
+- name (the name of the actor generating the notification)
+- icon (the icon of the actor generating the notification)
+
+### id
+- the id predicate **SHOULD** be present in the notification body.
+### type
+- the type predicate **SHOULD** be present in the notification body.
+### name
+- the name predicate **SHOULD** be present in the notification body.
+### icon
+- The icon object **MUST** be of type `as:Image`.
+- The icon object **MUST** provide a `width` and `height` value. Both values **MUST** be identical.
+- The icon object **SHOULD** provide an `as:url` predicate that leads towards an image.
+- The icon predicate **SHOULD** be provided in case the `type` value leads is `https://www.w3.org/ns/activitystreams#Application`.
+      * In case of other types, logos and profile images might be a valid substitute. These **MAY** be retrieved by the system displaying the notifications.
+
+- Multiple icons can be provided with different sizes. 
+- If multiple options are given for a single size, its up to the system to decide which icon to display.
+
+## Timestamp 
+To be displayed, a notification **SHOULD** have a valid timestamp value.
+This value **MAY** be auto-generated by the system displaying the notification.
+The timestamp **MUST** be added to the notification using the `https://www.w3.org/ns/activitystreams#published` predicate.
+
+## Image
+A notification **MAY** choose to include an optional image value that should be displayed in the notification body.
+This image should be added using the `https://www.w3.org/TR/activitystreams-vocabulary/#image` predicate.
+- The image object **MUST** be of type `as:Image`.
+- The image object **SHOULD** provide an `as:url` predicate that leads towards an image.
+
+## Title
+A notification **MAY** choose to include an optional title value that should be displayed in the notification body.
+This title should be added using the `https://www.w3.org/TR/activitystreams-vocabulary/#name` predicate.
+
+
+## Text
+A notification **MAY** choose to include an optional text value that should be displayed in the notification body.
+This text can be added both using the `https://www.w3.org/TR/activitystreams-vocabulary/#content` predicate, and using the `https://www.w3.org/TR/activitystreams-vocabulary/#summary` predicate.
+In case both predicates are present, the `https://www.w3.org/TR/activitystreams-vocabulary/#content` predicate **MUST** take precedence.
+<br>
+<br>
+In place of the `https://www.w3.org/TR/activitystreams-vocabulary/#content` value, the notification can use the `https://www.w3.org/TR/activitystreams-vocabulary/#contentMap` predicate. This way, the content can be provided in multiple languages:
+```JSON
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "contentMap": {
+    "en": "A <em>simple</em> notification"
+    “nl”: “Een <em>eenvoudige</en> notificatie”
+  }
+}
+```
+Similarly, instead of `https://www.w3.org/TR/activitystreams-vocabulary/#summary` the notification can use `https://www.w3.org/TR/activitystreams-vocabulary/#summaryMap`
+```JSON
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "summaryMap": {
+    "en": "A <em>simple</em> notification"
+    “nl”: “Een <em>eenvoudige</en> notificatie”
+  }
+}
+```
+
+## Style
+TODO
+
+
+## Action
+Notifications often have an attached action when clicked.
+In this case, we do a best attempt by navigating the user to the object predicate URI.
+In case the object value is a blank node identifier, we look for a `url` predicate on the object to navigate towards.
+
+# Example Notification bodies that can be displayed
+
+
+<div class=example>
+  <pre>
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "generator" {
+    "id": "https://myApplication.org/#ApplicationId"
+    "type": "Application"
+    "name": "MyApplication"
+    "icon": {
+      "type": "Image",
+      "url": "https://myApplication.org/icon_16x16.png",
+      "width": 16,
+      "height": 16
+    }
+  },
+  "published": "2022-12-12T12:12:12Z"^^xsd:dateTime,
+  "name": "My notification title",
+  "content": "My notification text",
+  "image": {
+    "type": "Image",
+    "url": "https://myApplication.org/feed/images_12315132.png",
+  }
+}
+  </pre>
+  This results in a system notification with the following values:
+
+  <table>
+    <thead>
+      <tr>
+        <th> Small icon
+        <th> App name
+        <th> Time stamp
+        <th> Large icon
+        <th> Title
+        <th> Text
+    <tbody>
+      <tr>
+        <td> The image at location https://myApplication.org/icon_16x16.png
+        <td> MyApplication
+        <td> 2022-12-12T12:12:12Z (according to system locality)
+        <td> The image at location https://myApplication.org/feed/images_12315132.png
+        <td> My notification title
+        <td> My notification text
+  </table>
+</div>
